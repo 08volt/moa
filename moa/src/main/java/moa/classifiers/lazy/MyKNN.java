@@ -49,7 +49,7 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
     @Override
     public double[] getVotesForInstance(Instance inst) {
 
-        double result[] = new double[C+1];
+        double[] result = new double[C+1];
         try {
             if(window == null || window.numInstances() == 0)
                 return new double[inst.numClasses()];
@@ -62,7 +62,8 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
             while(i< window.numInstances()){ //O(limit)
                 if(vicini.size() < kOption.getValue()){
                     vicini.add(window.get(i));
-                    distanza_minima = Math.max(distanza_minima, distance.distance(inst,window.get(i)));
+                    double d = distance.distance(inst,window.get(i));
+                    distanza_minima = Math.max(d, distanza_minima);
                 }
                 else{
                     double d = distance.distance(inst,window.get(i));
