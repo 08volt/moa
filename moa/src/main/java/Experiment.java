@@ -2,6 +2,7 @@ import com.yahoo.labs.samoa.instances.Instance;
 import moa.classifiers.Classifier;
 import moa.core.TimingUtils;
 import moa.streams.ConceptDriftStream;
+import moa.classifiers.lazy.MyKNN;
 
 import java.io.IOException;
 
@@ -16,7 +17,9 @@ public class Experiment {
         stream.positionOption.setValue(2500);
         stream.widthOption.setValue(1);
         stream.streamOption.setValueViaCLIString("generators.AgrawalGenerator");
-        stream.driftstreamOption.setValueViaCLIString("ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d (ConceptDriftStream -s generators.AgrawalGenerator -d (generators.AgrawalGenerator -f 4) -p 2500 -w 10000) -p 2500 -w 1");
+        stream.driftstreamOption.setValueViaCLIString("ConceptDriftStream -s (generators.AgrawalGenerator -f 2) -d " +
+                "(ConceptDriftStream -s generators.AgrawalGenerator -d " +
+                "(generators.AgrawalGenerator -f 4) -p 2500 -w 10000) -p 2500 -w 1");
 
         stream.prepareForUse();
 
