@@ -17,13 +17,13 @@ import java.util.ArrayList;
 
 public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
 
-    private static final long serialVersionUID = 54856L;
+    private static final long serialVersionUID = 1L;
 
-    public IntOption kOption = new IntOption( "k", 'k', "numero di vicini", 15, 1, Integer.MAX_VALUE);
+    public IntOption kOption = new IntOption( "n_neighbours", 'n', "numero di vicini", 15, 1, Integer.MAX_VALUE);
 
     public IntOption limitOption = new IntOption( "limite", 'w', "numero massimo di sample da ricordare", 301, 1, Integer.MAX_VALUE);
 
-    int C = 0;
+    protected int C = 0;
 
     protected Instances window;
 
@@ -49,7 +49,7 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
     @Override
     public double[] getVotesForInstance(Instance inst) {
 
-        double[] result = new double[C+1];
+        double[] result = new double[this.C + 1];
         try {
             if(window == null || window.numInstances() == 0)
                 return new double[inst.numClasses()];
@@ -104,8 +104,8 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
     // aggiunge sample alla window
     @Override
     public void trainOnInstanceImpl(Instance inst) {
-        if (inst.classValue() > C)
-            C = (int)inst.classValue();
+        if (inst.classValue() > this.C)
+            this.C = (int)inst.classValue();
         if (this.window == null) {
             this.window = new Instances(inst.dataset());
         }
@@ -131,8 +131,4 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
         return false;
     }
 
-    @Override
-    public Capabilities getCapabilities() {
-        return null;
-    }
 }
