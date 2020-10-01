@@ -29,6 +29,7 @@ import moa.core.DoubleVector;
 import moa.core.InstanceExample;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
+import moa.evaluation.BasicClassificationPerformanceEvaluator;
 import moa.options.ClassOption;
 
 import com.github.javacliparser.FloatOption;
@@ -40,7 +41,6 @@ import java.util.Collection;
 import java.util.concurrent.Callable;
 
 import moa.classifiers.trees.ARFHoeffdingTree;
-import moa.evaluation.BasicClassificationPerformanceEvaluator;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

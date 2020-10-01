@@ -19,9 +19,9 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
 
     private static final long serialVersionUID = 1L;
 
-    public IntOption kOption = new IntOption( "n_neighbours", 'n', "numero di vicini", 15, 1, Integer.MAX_VALUE);
+    public IntOption kOption = new IntOption( "n_neighbours", 'n', "numero di vicini", 55, 1, Integer.MAX_VALUE);
 
-    public IntOption limitOption = new IntOption( "limite", 'w', "numero massimo di sample da ricordare", 301, 1, Integer.MAX_VALUE);
+    public IntOption limitOption = new IntOption( "limite", 'w', "numero massimo di sample da ricordare", 3010, 1, Integer.MAX_VALUE);
 
     protected int C = 0;
 
@@ -67,19 +67,22 @@ public class MyKNN extends AbstractClassifier implements MultiClassClassifier {
                 }
                 else{
                     double d = distance.distance(inst,window.get(i));
+
                     if (d<distanza_minima){
                         //SOSTITUISCI VICINO
                         int max = 0;
                         double dist = distance.distance(inst,vicini.get(0));
+                        double seconda_dist = distance.distance(inst,vicini.get(0));
                         for(int v = 1; v<vicini.size(); v++){ // O(knn)
                             double newd = distance.distance(inst,vicini.get(v));
                             if(newd>dist){
+                                seconda_dist = dist;
                                 dist = newd;
                                 max = v;
                             }
                         }
                         vicini.set(max, window.get(i));
-                        distanza_minima = dist;
+                        distanza_minima = Math.max(seconda_dist,d);
                     }
                 }
                 i++;

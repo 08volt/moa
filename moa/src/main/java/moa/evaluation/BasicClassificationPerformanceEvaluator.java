@@ -62,6 +62,10 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
     protected Estimator[] precision;
 
     protected Estimator[] recall;
+    
+    protected Estimator TN;
+    
+    protected Estimator FP;
 
     protected int numClasses;
 
@@ -87,6 +91,9 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
 
     public FlagOption f1PerClassOption = new FlagOption("f1PerClass", 'f',
             "Report F1 per class.");
+    
+    public FlagOption GMeanOption = new FlagOption("GMean", 'g',
+            "Report GMean.");
 
     @Override
     public void reset() {
@@ -108,6 +115,8 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
         this.weightCorrect = newEstimator();
         this.weightCorrectNoChangeClassifier = newEstimator();
         this.weightMajorityClassifier = newEstimator();
+        this.TN = newEstimator();
+        this.FP = newEstimator();
         this.lastSeenClass = 0;
         this.totalWeightObserved = 0;
     }
@@ -136,6 +145,13 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
                     if (trueClass == i) {
                         recall[i].add(predictedClass == trueClass ? weight : 0.0);
                     } else recall[i].add(Double.NaN);
+                }
+                
+                if (predictedClass == 0 && trueClass == 0) {
+                	this.TN.add(weight);
+                }
+                else if (predictedClass == 1 && trueClass == 0) {
+                	this.FP.add(weight);
                 }
             }
             this.weightCorrectNoChangeClassifier.add(this.lastSeenClass == trueClass ? weight : 0);
@@ -191,6 +207,9 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
                         " (percent)", 100.0 * this.getRecallStatistic(i)));
             }
         }
+        if (GMeanOption.isSet())
+            measurements.add(new Measurement("GMean (percent)", 
+                this.getGMeanStatistic() * 100.0));
 
         Measurement[] result = new Measurement[measurements.size()];
 
@@ -278,6 +297,14 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
     public double getF1Statistic(int numClass) {
         return 2 * ((this.getPrecisionStatistic(numClass) * this.getRecallStatistic(numClass))
                 / (this.getPrecisionStatistic(numClass) + this.getRecallStatistic(numClass)));
+    }
+    
+    public double getGMeanStatistic() {
+    	return Math.sqrt(this.getRecallStatistic()*this.getNegativeAccuracy());
+    }
+    
+    public double getNegativeAccuracy() {
+    	return (this.TN.estimation() / (this.TN.estimation() + this.FP.estimation()));
     }
 
     @Override
