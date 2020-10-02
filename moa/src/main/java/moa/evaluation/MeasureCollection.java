@@ -21,6 +21,7 @@
 package moa.evaluation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import moa.AbstractMOAObject;
 import moa.cluster.Clustering;
@@ -51,7 +52,7 @@ public abstract class MeasureCollection extends AbstractMOAObject{
      public MeasureCollection() {
         names = getNames();
         numMeasures = names.length;
-        map = new HashMap<String, Integer>(numMeasures);        
+        map = new HashMap<>(numMeasures);
         for (int i = 0; i < names.length; i++) {
              map.put(names[i],i);
         }
@@ -63,11 +64,11 @@ public abstract class MeasureCollection extends AbstractMOAObject{
         corrupted = new boolean[numMeasures];
         enabled = getDefaultEnabled();
         time = 0;
-        events = new ArrayList<String>();
+        events = new ArrayList<>();
 
         for (int i = 0; i < numMeasures; i++) {
-                values[i] = new ArrayList<Double>();
-                sortedValues[i] = new ArrayList<Double>();
+                values[i] = new ArrayList<>();
+                sortedValues[i] = new ArrayList<>();
                 maxValue[i] = Double.MIN_VALUE;
                 minValue[i] = Double.MAX_VALUE;
                 corrupted[i] = false;
@@ -163,7 +164,7 @@ public abstract class MeasureCollection extends AbstractMOAObject{
 
          if(size > 0){
              if(size%2 == 1)
-                 return sortedValues[index].get((int)(size/2));
+                 return sortedValues[index].get(size/2);
              else
                  return (sortedValues[index].get((size-1)/2)+sortedValues[index].get((size-1)/2+1))/2.0;
          }
@@ -218,10 +219,8 @@ public abstract class MeasureCollection extends AbstractMOAObject{
      }
 
      protected boolean[] getDefaultEnabled(){
-         boolean[] defaults = new boolean[numMeasures];
-         for (int i = 0; i < defaults.length; i++) {
-             defaults[i] = true;
-         }
+         boolean[] defaults = new boolean[getNames().length];
+         Arrays.fill(defaults, true);
          return defaults;
      }
 

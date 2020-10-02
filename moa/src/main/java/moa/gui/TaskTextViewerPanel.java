@@ -589,6 +589,11 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
                     }
                     this.acc1[0].addValue(4, round(parseDouble(tokens[timeColumn])));
                     this.acc1[0].addValue(5, round(parseDouble(tokens[memoryColumn]) / (1024 * 1024)));
+                    //RECALL CLASS 0 AND CLASS 1
+                    this.acc1[0].addValue(6, round(parseDouble(tokens[8])));
+                    this.acc1[0].addValue(7, round(parseDouble(tokens[9])));
+                    //GMEAN
+                    this.acc1[0].addValue(8, round(parseDouble(tokens[10])));
 
                     if (isSecondLine == true) {
                         processFrequency = Math.abs(parseDouble(tokens[0]));

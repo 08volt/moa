@@ -33,14 +33,14 @@ public class Accuracy extends MeasureCollection implements ClassificationMeasure
 
     @Override
     public String[] getNames() {
-        String[] names = {"Accuracy", "Kappa", "Kappa Temp", "Ram-Hours", "Time", "Memory"};
-        return names;
+        return new String[] {"Accuracy","Kappa", "Kappa Temp", "Ram-Hours", "Time", "Memory","Recall_0","Recall_1","GMean"};
+
     }
 
     @Override
     protected boolean[] getDefaultEnabled() {
-        boolean[] defaults = {true, true, true, true, true, true};
-        return defaults;
+        return new boolean[] {true, true, true, true, true, true,true,true,true};
+
     }
 
     public void evaluateClustering(Clustering clustering, Clustering trueClsutering, ArrayList<DataPoint> points) {
