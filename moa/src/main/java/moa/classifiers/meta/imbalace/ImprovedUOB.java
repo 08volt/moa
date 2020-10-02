@@ -9,18 +9,18 @@
  * 
  */
 
-package moa.classifiers.meta;
+package moa.classifiers.meta.imbalace;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
-public class UOB extends OOB {
+public class ImprovedUOB extends ImprovedOOB {
 
 	@Override
 	public String getPurposeString() {
 		return "Undersampling on-line bagging of Wang et al IJCAI 2016.";
 	}
 	
-	public UOB() {
+	public ImprovedUOB() {
 		super();
 	}
 	
@@ -28,11 +28,9 @@ public class UOB extends OOB {
 	// will result in an error if classSize is not initialised yet
 	@Override
 	public double calculatePoissonLambda(Instance inst) {
-		double lambda = 1d;
 		int minClass = getMinorityClass();
 		
-		lambda = classSize[minClass] / classSize[(int) inst.classValue()];
+		return classSize[minClass] / classSize[(int) inst.classValue()];
 		
-		return lambda;
 	}
 }
