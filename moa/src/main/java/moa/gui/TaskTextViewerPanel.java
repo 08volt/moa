@@ -580,8 +580,9 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
             if (isPrequential || isHoldOut || this.taskManagerPanel != null) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
-                    System.out.println(line);
                     String[] tokens = line.split(",");
+                    //System.out.println(tokens[8]);
+
                     this.acc1[0].addValue(0, round(parseDouble(tokens[accuracyColumn])));
                     this.acc1[0].addValue(1, round(parseDouble(tokens[kappaColumn])));
                     this.acc1[0].addValue(2, round(parseDouble(tokens[kappaTempColumn])));
@@ -596,8 +597,13 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
                     //GMEAN
                     this.acc1[0].addValue(8, round(parseDouble(tokens[10])));
                     //SIZE CLASS 0 AND CLASS 1
-                    this.acc1[0].addValue(9, round(parseDouble(tokens[14])));
-                    this.acc1[0].addValue(10, round(parseDouble(tokens[15])));
+                    try {
+                        this.acc1[0].addValue(9, round(parseDouble(tokens[14])));
+                        this.acc1[0].addValue(10, round(parseDouble(tokens[15])));
+                    }catch(Exception e){
+
+                        //e.printStackTrace();
+                    }
 
                     if (isSecondLine) {
                         processFrequency = Math.abs(parseDouble(tokens[0]));
