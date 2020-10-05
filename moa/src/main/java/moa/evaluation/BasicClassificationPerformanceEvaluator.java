@@ -101,6 +101,8 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
     }
 
     public void reset(int numClasses) {
+        this.recallPerClassOption.setValue(true);
+        this.GMeanOption.setValue(true);
         this.numClasses = numClasses;
         this.rowKappa = new Estimator[numClasses];
         this.columnKappa = new Estimator[numClasses];
@@ -321,7 +323,8 @@ public class BasicClassificationPerformanceEvaluator extends AbstractOptionHandl
 
     @Override
     protected void prepareForUseImpl(TaskMonitor monitor, ObjectRepository repository) {
-
+        this.recallPerClassOption.setValue(true);
+        this.GMeanOption.setValue(true);
     }
 
     public interface Estimator extends Serializable {

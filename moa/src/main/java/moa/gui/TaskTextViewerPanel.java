@@ -577,9 +577,10 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
                     i++;
                 }
             }
-            if (isPrequential || isHoldOut || this.taskManagerPanel instanceof CDTaskManagerPanel) {
+            if (isPrequential || isHoldOut || this.taskManagerPanel != null) {
                 while (scanner.hasNextLine()) {
                     String line = scanner.nextLine();
+                    System.out.println(line);
                     String[] tokens = line.split(",");
                     this.acc1[0].addValue(0, round(parseDouble(tokens[accuracyColumn])));
                     this.acc1[0].addValue(1, round(parseDouble(tokens[kappaColumn])));
@@ -594,8 +595,11 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
                     this.acc1[0].addValue(7, round(parseDouble(tokens[9])));
                     //GMEAN
                     this.acc1[0].addValue(8, round(parseDouble(tokens[10])));
+                    //SIZE CLASS 0 AND CLASS 1
+                    this.acc1[0].addValue(9, round(parseDouble(tokens[14])));
+                    this.acc1[0].addValue(10, round(parseDouble(tokens[15])));
 
-                    if (isSecondLine == true) {
+                    if (isSecondLine) {
                         processFrequency = Math.abs(parseDouble(tokens[0]));
                         isSecondLine = false;
                         if (acc1[0].getValue(0, 0) != oldAccuracy.getValue(0, 0)) { //(!line.equals(secondLine)) {
@@ -617,7 +621,7 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
         }
 
 
-        if (this.taskManagerPanel instanceof CDTaskManagerPanel) {
+        if (this.taskManagerPanel != null) {
             ConceptDriftMainTask cdTask = this.taskManagerPanel.getSelectedCurrenTask();
             ArrayList<ClusterEvent> clusterEvents = cdTask.getEventsList();
             this.graphCanvas.setClusterEventsList(clusterEvents);
@@ -631,7 +635,7 @@ public class TaskTextViewerPanel extends JPanel implements ActionListener {
 
     private double parseDouble(String s) {
         double ret = 0;
-        if (s.equals("?") == false) {
+        if (!s.equals("?")) {
             ret = Double.parseDouble(s);
         }
         return ret;

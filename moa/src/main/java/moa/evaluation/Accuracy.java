@@ -33,13 +33,13 @@ public class Accuracy extends MeasureCollection implements ClassificationMeasure
 
     @Override
     public String[] getNames() {
-        return new String[] {"Accuracy","Kappa", "Kappa Temp", "Ram-Hours", "Time", "Memory","Recall_0","Recall_1","GMean"};
+        return new String[] {"Accuracy","Kappa", "Kappa Temp", "Ram-Hours", "Time", "Memory","Recall_0","Recall_1","GMean","Size_0","Size_1"};
 
     }
 
     @Override
     protected boolean[] getDefaultEnabled() {
-        return new boolean[] {true, true, true, true, true, true,true,true,true};
+        return new boolean[] {true, true, true, true, true, true,true,true,true,true,true};
 
     }
 
