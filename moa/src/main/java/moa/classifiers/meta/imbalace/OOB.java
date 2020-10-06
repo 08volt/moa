@@ -32,7 +32,7 @@ public class OOB extends ImprovedOOB {
         normal  = new HashSet<>();
     }
 
-
+    @Override
     protected void updateClassSize(Instance inst) {
         //RECALL UPDATE
         if (this.classRecall == null) {
@@ -73,6 +73,7 @@ public class OOB extends ImprovedOOB {
 
     // classInstance is the class corresponding to the instance for which we want to calculate lambda
     // will result in an error if classSize is not initialised yet
+    @Override
     public double calculatePoissonLambda(Instance inst) {
 
         if (minorities.contains((int)inst.classValue()))
