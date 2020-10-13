@@ -29,10 +29,11 @@ public class OSelm extends AbstractClassifier {
     protected DenseMatrix H;
     protected DenseMatrix P;
     protected DenseMatrix Y;
-    protected DenseMatrix outputWeights;
+    protected DenseMatrix outputWeights; //Bl
+    private DenseMatrix InputWeight; //attributes weights
+    private DenseMatrix BiasofHiddenNeurons;
 
-    private ArrayList<Integer> y_values = new ArrayList<>();
-    private Instances init_inst;
+    protected final Instances init_inst = new Instances();
 
 
     protected int i_count = 0;
@@ -42,15 +43,16 @@ public class OSelm extends AbstractClassifier {
     @Override
     public double[] getVotesForInstance(Instance inst) {
         if(i_count<initialization_chunk.getValue()) {
-            y_values.add((int)inst.classValue());
+
             init_inst.add(inst);
             return new double[0];
         }
         if(i_count == initialization_chunk.getValue()) {
-            y_values.add((int)inst.classValue());
+
             init_inst.add(inst);
             try {
-                return initialization();
+                initialization();
+                return new double[0];
             } catch (NotConvergedException e) {
                 System.out.println("INIT NOT CONVERGENT");
                 return new double[0];
@@ -58,49 +60,86 @@ public class OSelm extends AbstractClassifier {
         }
 
 
+
         return new double[0];
     }
 
-    private double[] initialization() throws NotConvergedException {
-        H = new DenseMatrix(initialization_chunk.getValue(), numberofHiddenNeurons.getValue());
-        Y = new DenseMatrix(initialization_chunk.getValue(),init_inst.numClasses());
-        for(int i = 0; i< initialization_chunk.getValue(); i ++){
-            Y.set(i,y_values.get(i),1);
+
+    private DenseMatrix transpose(DenseMatrix m){
+        return (DenseMatrix) m.transpose(new DenseMatrix(m.numColumns(),m.numRows()));
+    }
+
+    private void initialization() throws NotConvergedException {
+        //n input neurons = numAttributes
+        //n output neurons = numClasses
+        int seed = randomSeedOption.getValue();
+        int hiddenN = numberofHiddenNeurons.getValue();
+        int nTrain = initialization_chunk.getValue();
+        int inputN = init_inst.numAttributes();
+        int outputN = init_inst.numClasses();
+
+        H = new DenseMatrix(nTrain, hiddenN);
+        Y = new DenseMatrix(nTrain,outputN); // MATRIX NxQ (i,j) == 1 if class(xi) = j
+        for(int i = 0; i< nTrain; i ++){
+            Y.set(i,(int)init_inst.instance(i).classValue(),1);
         }
-        y_values = null;
 
-        int[] label = new int[init_inst.numClasses()];
-        for (int i = 0; i < init_inst.numClasses(); i++) {
-            label[i] = i; // class label starts form 0
+
+
+
+
+        InputWeight = randomMatrix(hiddenN,inputN, seed);
+        outputWeights = new DenseMatrix(hiddenN,1);
+        BiasofHiddenNeurons = randomMatrix(hiddenN, 1, seed);
+
+        DenseMatrix transT = new DenseMatrix(nTrain, 1);// transT(numTrainData,1)
+        DenseMatrix transP = new DenseMatrix(nTrain,inputN);
+
+        //initialization of TransP with attributes values
+        for (int i = 0; i < nTrain; i++) {
+            for (int j = 0; j < inputN; j++)
+                transP.set(i, j - 1, init_inst.get(i).value(j));
+
         }
 
+        DenseMatrix tempH = new DenseMatrix(outputN,nTrain);
+        InputWeight.mult(transpose(transP), tempH);
 
-        for(int j = 0; j < numberofHiddenNeurons.getValue();  j ++) {
-            //activation function
-            if (activationFunction.getValue().startsWith("sig")) {
-                for (int j = 0; j < numberofHiddenNeurons.getValue(); j++) {
-                    for (int i = 0; i < initialization_chunk.getValue(); i++) {
-                        double temp = tempH.get(j, i);
-                        temp = 1.0f / (1 + Math.exp(-temp));
-                        H.set(j, i, temp);
-                    }
-                }
-            } else if (activationFunction.getValue().startsWith("sin")) {
-                for (int j = 0; j < numberofHiddenNeurons.getValue(); j++) {
-                    for (int i = 0; i < initialization_chunk.getValue(); i++) {
-                        double temp = tempH.get(j, i);
-                        temp = Math.sin(temp);
-                        H.set(j, i, temp);
-                    }
-                }
+        DenseMatrix BiasMatrix = new DenseMatrix(hiddenN,nTrain);
+
+        for (int j = 0; j < nTrain; j++) {
+            for (int i = 0; i < hiddenN; i++) {
+                BiasMatrix.set(i, j, BiasofHiddenNeurons.get(i, 0));
             }
         }
 
-        DenseMatrix mpH =  (new Inverse(H)).getMPInverse();
-        outputWeights = new DenseMatrix(mpH.mult(Y,outputWeights));
+        tempH.add(BiasMatrix);
 
+        for (int j = 0; j < hiddenN; j++) {
+            for (int i = 0; i < nTrain; i++) {
+                double temp = tempH.get(j, i);
+                temp = Math.sin(temp);
+                H.set(j, i, temp);
+            }
+        }
+
+
+        DenseMatrix mpH = (new Inverse(H)).getMPInverse();
+
+        DenseMatrix transH = new DenseMatrix(H.numColumns(),H.numRows());
+        H.transpose(transH);
+        P = (new Inverse((DenseMatrix) H.mult(transH,P))).getInverse();
+        mpH.mult(Y,outputWeights);
 
     }
+
+
+    @Override
+    public void trainOnInstanceImpl(Instance inst) {
+        //P = P-PH'(I+HPH')ˆ(-1)HP
+        //outputWeights B = B + PH'(Y-HB)
+    }
+
 
     public static DenseMatrix randomMatrix(int rows, int columns, int seed) {
         Random x = new Random(seed);
@@ -118,10 +157,7 @@ public class OSelm extends AbstractClassifier {
 
     }
 
-    @Override
-    public void trainOnInstanceImpl(Instance inst) {
 
-    }
 
     @Override
     protected Measurement[] getModelMeasurementsImpl() {
