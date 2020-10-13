@@ -98,7 +98,8 @@ public class KNNwithClassImbalance extends kNN {
                 if(cntMajor < (Kpurity.getValue()+1)/sizes.size()){
                     for(int n = 0; n < neighbours.numInstances(); n++)
                         if(neighbours.get(n).classValue() == major)
-                            impurity.add(window.indexOf(neighbours.instance(n)));
+                            break;
+                            //impurity.add(window.indexOf(neighbours.instance(n)));
                 }
 
             }

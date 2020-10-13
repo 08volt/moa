@@ -11,10 +11,10 @@ import moa.tasks.TaskMonitor;
 public class ImbalacedDriftStream extends ImbalancedStream{
 
     public IntOption positionOption = new IntOption("position",
-            'p', "Central position of concept drift change.", 0);
+            'p', "Central position of concept drift change.", 50000);
 
     public IntOption widthOption = new IntOption("width",
-            'w', "Width of concept drift change.", 1000);
+            'w', "Width of concept drift change.", 1);
 
     public ClassOption driftstreamOption = new ClassOption("driftstream", 'd',
             "Imbalance drift Stream.", ExampleStream.class,
@@ -38,7 +38,7 @@ public class ImbalacedDriftStream extends ImbalancedStream{
         double probabilityDrift = 1.0 / (1.0 + Math.exp(x));
         if (this.random.nextDouble() > probabilityDrift)
             return super.nextInstance();
-
+        System.out.println("CHANGE "+ numberInstanceStream);
         return this.driftStream.nextInstance();
 
 
