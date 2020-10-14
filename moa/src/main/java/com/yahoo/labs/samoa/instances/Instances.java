@@ -90,6 +90,7 @@ public class Instances implements Serializable {
      * Instantiates a new instances.
      */
     public Instances() {
+        this.instances = new ArrayList<Instance>();
     }
 
     /**
