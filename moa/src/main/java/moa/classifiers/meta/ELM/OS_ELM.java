@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-public class OSelm extends AbstractClassifier implements MultiClassClassifier {
+public class OS_ELM extends AbstractClassifier implements MultiClassClassifier {
 
     private static final long serialVersionUID = 1L;
 
@@ -42,7 +42,7 @@ public class OSelm extends AbstractClassifier implements MultiClassClassifier {
 
     protected int i_count = 0;
 
-    public OSelm(){
+    public OS_ELM(){
         init_list_inst = new ArrayList<Instance>();
     }
 
@@ -104,6 +104,11 @@ public class OSelm extends AbstractClassifier implements MultiClassClassifier {
 
     private static  DenseMatrix mult(DenseMatrix A, DenseMatrix B){
         return (DenseMatrix) A.mult(B,new DenseMatrix(A.numRows(),B.numColumns()));
+    }
+
+    private static  DenseMatrix add(DenseMatrix A, DenseMatrix B){
+        DenseMatrix result = A.copy();
+        return (DenseMatrix) result.add(B);
     }
 
     public static DenseMatrix randomMatrix(int rows, int columns, int seed) {
