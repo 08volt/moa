@@ -17,7 +17,7 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
 
     private static final long serialVersionUID = 1L;
 
-    public IntOption initialization_chunk = new IntOption("initialization_chunk", 'I',
+    public IntOption n_initialization_chunk = new IntOption("initialization_chunk", 'I',
             "The number of instances for the inizitialization chunk", 10, 1, 10000);
     public IntOption numberofHiddenNeurons = new IntOption("numberofHiddenNeurons", 'N',
             "The number of neurons in the hidden layer", 20, 1, 10000);
@@ -190,7 +190,16 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
     DenseMatrix bias;
     // hidden to output layer connection
     DenseMatrix beta;
+    // P (k+1)
     DenseMatrix M;
+
+    //chunk for the initialization Train
+    DenseMatrix initializationChunk;
+    DenseMatrix initializationTargets;
+
+    //instances seen so far
+    int count_inst = 0;
+
     int seed = 1;
 
 
@@ -204,6 +213,9 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
             this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
 
             this.beta = randomMatrix(numberofHiddenNeurons.getValue(), numberofclasses.getValue(), seed, false);
+
+            this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
+            this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
             return new double[0];
 
         }
@@ -219,15 +231,32 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
     @Override
     public void resetLearningImpl() {
         this.inputWeights = randomMatrix(numberofHiddenNeurons.getValue(), numberofattributes.getValue(), seed, false);
-
         this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
-
         this.beta = randomMatrix(numberofHiddenNeurons.getValue(), numberofclasses.getValue(), seed, false);
+        this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
+        this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
 
     }
 
     @Override
     public void trainOnInstanceImpl(Instance inst) {
+        if(count_inst < n_initialization_chunk.getValue() ){
+            if(initializationChunk == null){
+                this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
+                this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
+            }
+
+
+            for(int a = 0; a<inst.numAttributes(); a++){
+                initializationChunk.set(count_inst,a,inst.value(a));
+                initializationTargets.set(count_inst,0,inst.classValue());
+            }
+            count_inst ++;
+            return;
+
+
+        }
+
         double[][] features = new double[1][inst.numAttributes()];
         for(int a = 0; a<inst.numAttributes(); a++){
             features[0][a] = inst.value(a);
