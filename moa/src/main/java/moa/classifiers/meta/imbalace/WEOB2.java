@@ -9,8 +9,13 @@ public class WEOB2 extends WEOB1{
         double[] oobVotes = oob.getVotesForInstance(inst);
         double[] uobVotes = uob.getVotesForInstance(inst);
 
-        double uobGini = calcGini(classRecallUOB);
-        double oobGini = calcGini(classRecallOOB);
+        if(classRecallUOB == null){
+            classRecallOOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
+            classRecallUOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
+        }
+
+        double uobGini = classRecallUOB.getGmean();
+        double oobGini = classRecallUOB.getGmean();
 
         if (oobGini>uobGini){
             return oobVotes;

@@ -28,10 +28,13 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
     public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's',
             "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);
 
+    public IntOption SmoothedRecallWindowSizeOption = new IntOption("SmoothedRecallWindowSizeOption", 'w',
+            "The size of the window to compute the smoothed recall ", 51, 1, Integer.MAX_VALUE);
+
     protected ImprovedOOB oob;
     protected ImprovedUOB uob;
-    protected double[] classRecallOOB;
-    protected double[] classRecallUOB;
+    SmoothedRecall classRecallOOB;
+    SmoothedRecall classRecallUOB;
 
     public WEOB1(){
         super();
@@ -46,17 +49,7 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         oob.prepareForUse();
         uob.prepareForUse();
 
-    }
 
-    public double calcGini(double[] recalls){
-        if(recalls == null)
-            return 1d;
-        double gini = 1;
-        for (double recall : recalls) {
-            gini *= recall;
-        }
-
-        return Math.pow(gini,1d/(double) recalls.length);
     }
 
     @Override
@@ -65,8 +58,12 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         double[] uobVotes = uob.getVotesForInstance(inst);
         double[] finalVotes = new double[oobVotes.length];
 
-        double uobGini = calcGini(classRecallUOB);
-        double oobGini = calcGini(classRecallOOB);
+        if(classRecallUOB == null){
+            classRecallOOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
+            classRecallUOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
+        }
+        double uobGini = classRecallUOB.getGmean();
+        double oobGini = classRecallOOB.getGmean();
 
         double alphaO = oobGini / (oobGini + uobGini);
         double alphaU = uobGini / (oobGini + uobGini);
@@ -85,23 +82,15 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         uob.resetLearningImpl();
     }
 
-    public void recallUpdate(double[] recalls,int instanceClass, boolean pred){
-        recalls[instanceClass] = this.recalltheta.getValue() * recalls[instanceClass] + (1d - this.recalltheta.getValue()) * (pred ? 1d:0d);
-    }
-
     @Override
     public void trainOnInstanceImpl(Instance inst) {
-        if (this.classRecallOOB == null) {
-            classRecallOOB = new double[inst.numClasses()];
-            classRecallUOB = new double[inst.numClasses()];
-            // <---le19/01/18 modification to start class size as equal for all classes
-            for (int i=0; i<classRecallOOB.length; ++i) {
-                classRecallOOB[i] = 1d;
-                classRecallUOB[i] = 1d;
-            }
+        //initialize recalls
+        if(classRecallUOB == null){
+            classRecallOOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
+            classRecallUOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
         }
-        recallUpdate(classRecallOOB,(int)inst.classValue(),oob.correctlyClassifies(inst));
-        recallUpdate(classRecallUOB,(int)inst.classValue(),uob.correctlyClassifies(inst));
+        classRecallOOB.insertPrediction((int)inst.classValue(),oob.correctlyClassifies(inst));
+        classRecallUOB.insertPrediction((int)inst.classValue(),uob.correctlyClassifies(inst));
 
         oob.trainOnInstanceImpl(inst);
         uob.trainOnInstanceImpl(inst);
