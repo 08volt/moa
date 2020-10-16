@@ -13,7 +13,7 @@ import weka.core.Utils;
 
 import java.util.Random;
 
-public class newOSELM extends AbstractClassifier implements MultiClassClassifier {
+public class OSELM extends AbstractClassifier implements MultiClassClassifier {
 
     private static final long serialVersionUID = 1L;
 
