@@ -44,11 +44,11 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
         }
         return result;
     }
-    private static  DenseMatrix addallrows(DenseMatrix A, DenseMatrix B){
+    private static  DenseMatrix addallcols(DenseMatrix A, DenseMatrix B){
         DenseMatrix result = A.copy();
         for(int i = 0; i<A.numRows(); i++)
-            for(int j = 0; j<A.numRows(); j++)
-                result.set(i,j, A.get(i,j) + B.get(0,j));
+            for(int j = 0; j<A.numColumns(); j++)
+                result.set(i,j, A.get(i,j) + B.get(j,0));
         return result;
     }
     private static  DenseMatrix sub(DenseMatrix A, DenseMatrix B){
@@ -78,20 +78,20 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
      *
      * @param features Samples X attributes
      * @param weights Hidden x attributes
-     * @param bias 1 x Hidden
+     * @param bias Hidden X 1
      * @return new H Semples X hidden
      */
     public static DenseMatrix sigmoidActFunc(DenseMatrix features, DenseMatrix weights, DenseMatrix bias) {
         assert(features.numColumns() == weights.numColumns());
         int numSamples = features.numRows();
 
-        DenseMatrix V = addallrows(mult(features, transpose(weights)),bias);
-        DenseMatrix Htemp = new DenseMatrix(numSamples, bias.numColumns());
-        for (int j = 0; j < bias.numColumns(); j++) {
+        DenseMatrix V = addallcols(mult(features, transpose(weights)),bias);
+        DenseMatrix Htemp = new DenseMatrix(numSamples, weights.numRows());
+        for (int j = 0; j < weights.numRows(); j++) {
             for (int i = 0; i < numSamples; i++) {
-                double temp = V.get(j, i);
+                double temp = V.get(i, j);
                 temp = 1.0f / (1 + Math.exp(-temp));
-                Htemp.set(j, i, temp);
+                Htemp.set(i, j, temp);
             }
         }
         return Htemp;
@@ -131,16 +131,19 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
 
         //randomly initialize the input->hidden connections
         this.inputWeights = randomMatrix(hiddenN, inputN,seed, true);
-        if(this.activationFunction.getValue() == "sig") {
-            this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
-        }else{
-            System.out.println("Unknown activation function type");
-            throw new NotImplementedError();
-        }
+
+
+        this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
+
 
         DenseMatrix H0 = calculateHiddenLayerActivation(features);
         this.M = new Inverse(mult(transpose(H0),H0)).getInverse();
-        this.beta = mult(new Inverse(H0).getInverse(),targets);
+        try {
+            this.beta = mult(new Inverse(H0).getMPInverse(), targets);
+        }catch (Exception e){
+            e.printStackTrace();
+            System.out.println("NOT INVERTIBLE H0");
+        }
 
     }
 
@@ -155,20 +158,19 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
         int numSamples = features.numRows();
         DenseMatrix H = this.calculateHiddenLayerActivation(features);
         DenseMatrix Ht = transpose(H);
-        try {
-            DenseMatrix I = eye(numSamples);
 
-            DenseMatrix temp0 = new Inverse(add(I, mult(H, mult(M, Ht)))).getInverse(); // N x N
+        DenseMatrix I = eye(numSamples);
 
-            DenseMatrix temp1 = mult(M, mult(Ht, mult(temp0, mult(H, M)))); // H x H
 
-            this.M = sub(M, temp1); // Woodbury formula
-            this.beta = add(beta, mult(M,mult(Ht,sub(targets,mult(H,beta))))); // H x O
 
-        } catch (Exception e){
-            e.printStackTrace();
-            System.out.println("SVD not converge, ignore the current training cycle");
-        }
+        DenseMatrix temp0 = new Inverse(add(I, mult(H, mult(M, Ht)))).getInverse(); // N x N
+
+        DenseMatrix temp1 = mult(M, mult(Ht, mult(temp0, mult(H, M)))); // H x H
+
+        this.M = sub(M, temp1); // Woodbury formula
+        this.beta = add(beta, mult(M,mult(Ht,sub(targets,mult(H,beta))))); // H x O
+
+
     }
 
     /***
@@ -207,7 +209,7 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
     @Override
     public double[] getVotesForInstance(Instance inst) {
         if(inputWeights == null){
-
+            System.out.println(this.activationFunction.getValue());
             this.inputWeights = randomMatrix(numberofHiddenNeurons.getValue(), numberofattributes.getValue(), seed, false);
 
             this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
@@ -215,13 +217,16 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
             this.beta = randomMatrix(numberofHiddenNeurons.getValue(), numberofclasses.getValue(), seed, false);
 
             this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
-            this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
-            return new double[0];
+            this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),inst.numClasses());
+
 
         }
+        if(count_inst < n_initialization_chunk.getValue()){
+            return new double[0];
+        }
 
-        double[][] features = new double[1][inst.numAttributes()];
-        for(int a = 0; a<inst.numAttributes(); a++){
+        double[][] features = new double[1][inst.numAttributes()-1];
+        for(int a = 0; a<inst.numAttributes()-1; a++){
             features[0][a] = inst.value(a);
         }
 
@@ -234,31 +239,37 @@ public class newOSELM extends AbstractClassifier implements MultiClassClassifier
         this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
         this.beta = randomMatrix(numberofHiddenNeurons.getValue(), numberofclasses.getValue(), seed, false);
         this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
-        this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
+        this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),numberofclasses.getValue());
 
     }
 
     @Override
     public void trainOnInstanceImpl(Instance inst) {
-        if(count_inst < n_initialization_chunk.getValue() ){
+        if(count_inst < n_initialization_chunk.getValue() -1 ){
             if(initializationChunk == null){
                 this.initializationChunk = new DenseMatrix(n_initialization_chunk.getValue(),numberofattributes.getValue());
-                this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),1);
+                this.initializationTargets = new DenseMatrix(n_initialization_chunk.getValue(),inst.numClasses());
             }
 
-
-            for(int a = 0; a<inst.numAttributes(); a++){
+            for(int a = 0; a<inst.numAttributes()-1; a++){
                 initializationChunk.set(count_inst,a,inst.value(a));
-                initializationTargets.set(count_inst,0,inst.classValue());
+                initializationTargets.set(count_inst,(int)inst.classValue(),1);
             }
             count_inst ++;
             return;
 
 
         }
+        if (count_inst == n_initialization_chunk.getValue() -1){
+            for(int a = 0; a<inst.numAttributes()-1; a++){
+                initializationChunk.set(count_inst,a,inst.value(a));
+                initializationTargets.set(count_inst,(int)inst.classValue(),1);
+            }
+            this.initializePhase(initializationChunk,initializationTargets);
+        }
 
-        double[][] features = new double[1][inst.numAttributes()];
-        for(int a = 0; a<inst.numAttributes(); a++){
+        double[][] features = new double[1][inst.numAttributes()-1];
+        for(int a = 0; a<inst.numAttributes()-1; a++){
             features[0][a] = inst.value(a);
         }
         DenseMatrix target = new DenseMatrix(1,numberofclasses.getValue());
