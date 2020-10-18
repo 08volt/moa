@@ -99,7 +99,6 @@ public class OSELM extends AbstractClassifier implements MultiClassClassifier {
     }
 
     /**
-     *
      * @param features Samples X attributes
      * @return new H Semples X hidden
      */

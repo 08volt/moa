@@ -22,7 +22,6 @@ public class SmoothedRecall {
         for(int i = 0; i<numClasses; i++){
             Arrays.fill(this.recalls[i],-1d);
         }
-
     }
 
     public double getGmean(){
