@@ -7,9 +7,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.MultiClassClassifier;
 import moa.core.Measurement;
 import no.uib.cipr.matrix.DenseMatrix;
-import org.kramerlab.bmad.algorithms.GreedySelector;
 import scala.NotImplementedError;
-import weka.core.Utils;
 
 import java.util.Random;
 
@@ -44,7 +42,7 @@ public class OSELM extends AbstractClassifier implements MultiClassClassifier {
         }
         return result;
     }
-    private static  DenseMatrix addallcols(DenseMatrix A, DenseMatrix B){
+    private static  DenseMatrix addallrows(DenseMatrix A, DenseMatrix B){
         DenseMatrix result = A.copy();
         for(int i = 0; i<A.numRows(); i++)
             for(int j = 0; j<A.numColumns(); j++)
@@ -75,7 +73,6 @@ public class OSELM extends AbstractClassifier implements MultiClassClassifier {
     }
 
     /**
-     *
      * @param features Samples X attributes
      * @param weights Hidden x attributes
      * @param bias Hidden X 1
@@ -84,10 +81,11 @@ public class OSELM extends AbstractClassifier implements MultiClassClassifier {
     public static DenseMatrix sigmoidActFunc(DenseMatrix features, DenseMatrix weights, DenseMatrix bias) {
         assert(features.numColumns() == weights.numColumns());
         int numSamples = features.numRows();
+        int hiddenN = weights.numRows();
 
-        DenseMatrix V = addallcols(mult(features, transpose(weights)),bias);
-        DenseMatrix Htemp = new DenseMatrix(numSamples, weights.numRows());
-        for (int j = 0; j < weights.numRows(); j++) {
+        DenseMatrix V = addallrows(mult(features, transpose(weights)),bias); // (numSamples, hiddenN)
+        DenseMatrix Htemp = new DenseMatrix(numSamples, hiddenN);
+        for (int j = 0; j < hiddenN; j++) {
             for (int i = 0; i < numSamples; i++) {
                 double temp = V.get(i, j);
                 temp = 1.0f / (1 + Math.exp(-temp));
@@ -131,18 +129,14 @@ public class OSELM extends AbstractClassifier implements MultiClassClassifier {
         //randomly initialize the input->hidden connections
         this.inputWeights = randomMatrix(hiddenN, inputN,seed, true);
 
-
+        //randomly initialize the hidden node additive bias
         this.bias = randomMatrix(numberofHiddenNeurons.getValue(), 1, seed, true);
 
 
-        DenseMatrix H0 = calculateHiddenLayerActivation(features);
-        this.M = new Inverse(mult(transpose(H0),H0)).getInverse();
-        try {
-            this.beta = mult(new Inverse(H0).getMPInverse(), targets);
-        }catch (Exception e){
-            e.printStackTrace();
-            System.out.println("NOT INVERTIBLE H0");
-        }
+        DenseMatrix H0 = calculateHiddenLayerActivation(features); // Sample X Hidden
+        this.M = new Inverse(mult(transpose(H0),H0)).getInverse();  // Hidden X Hidden
+        this.beta = mult(mult(this.M,transpose(H0)), targets);  // Hidden X Output
+
 
     }
 
