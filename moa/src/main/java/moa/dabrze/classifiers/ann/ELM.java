@@ -156,7 +156,8 @@ public class ELM extends AbstractClassifier implements MultiClassClassifier
 
     public static INDArray getInstanceTarget(Instance instance)
     {
-        return Nd4j.zeros(instance.numClasses()).putScalar((int)instance.classValue(), 1.0);
+        int[] shape = {1,instance.numClasses()};
+        return Nd4j.zeros(shape).putScalar((int)instance.classValue(), 1.0);
     }
 
     protected void allocateResources(Instance instance)

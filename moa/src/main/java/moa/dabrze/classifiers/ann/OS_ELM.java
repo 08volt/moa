@@ -14,6 +14,8 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.ops.transforms.Transforms;
 
+import java.util.Arrays;
+
 public class OS_ELM extends ELM {
 
     public IntOption batchSize = new IntOption("batchSize", 'b',
@@ -62,7 +64,7 @@ public class OS_ELM extends ELM {
     {
         INDArray h = Transforms.sigmoid(getInstanceData(instance).mmul(alpha).add(bias).transpose());
         INDArray tt = getInstanceTarget(instance);
-        P = P.sub(P.mmul(h).mmul(h.transpose()).mmul(P).div(1 + h.mmul(P).mmul(h.transpose()).getDouble(0,0)));
+        P = P.sub(P.mmul(h).mmul(h.transpose()).mmul(P).div(1 + h.transpose().mmul(P).mmul(h).getDouble(0,0)));
         beta = beta.add(P.mmul(h).mmul(tt.sub(h.transpose().mmul(beta))));
     }
 
