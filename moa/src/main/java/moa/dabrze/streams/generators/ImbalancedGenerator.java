@@ -74,7 +74,7 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
     
     public FloatOption stdDevsOption = new FloatOption("stdDevs", 'g',
     		"Number of standard deviations fitting in centroids with normal distribution", 3.0, 0.1, Float.MAX_VALUE);
-    
+
     /**
      * Cluster of positive class instances defined by a center of mass in attribute space
      * and a radius on each attribute axis. Ellipsoidal shape.
@@ -99,7 +99,13 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
         	this.dimensions = dimensions;
         	this.distribution = "normal";
         }
-        
+
+        /**
+         * ENRICO
+         * Generate points until one return True from withinSafeRegion method
+         * @param random random numbers generator
+         * @return found point
+         */
         public double[] nextSafePoint(Random random) {
         	double[] attrs = new double[dimensions];
     		do {
@@ -115,7 +121,15 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
     		} while(!withinSafeRegion(attrs));
     		return attrs;
         }
-        
+
+        /**
+         * ENRICO
+         * Generate points until one return True from withinBorderlineRegion method
+         * -> not safe region && in radiuses + borderlineRadius
+         * TODO centre[i] - 1 < attrs[i] < centre[i] + 1   check if radiuses[i] == 1 ??
+         * @param random random numbers generator
+         * @return found point
+         */
         public double[] nextBorderlinePoint(Random random) {
         	double[] attrs = new double[dimensions];
     		do {
@@ -125,30 +139,53 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
     		} while(!withinBorderlineRegion(attrs));
     		return attrs;
         }
-        
+
         private Boolean withinSafeRegion(double[] attrs) {
         	return withinRegion(attrs, this.radiuses);
         }
-        
+
+
+        /**
+         * ENRICO
+         * borderlineRadiuses[i] = this.radiuses[i] + borderlineRadius
+          * @param attrs point to analyze
+         * @return not safe ragione but in region with borderlineRadiuses
+         */
         private Boolean withinBorderlineRegion(double[] attrs) {
         	double[] borderlineRadiuses = new double[dimensions];
         	for(int i = 0; i < dimensions; i++) borderlineRadiuses[i] = this.radiuses[i] + borderlineRadius;
         	return !withinSafeRegion(attrs) && withinRegion(attrs, borderlineRadiuses);
         }
-        
+
+
+        /**
+         * ENRICO
+         * outlierRadiuses[i] = this.radiuses[i] + borderlineRadius * 2
+         * @param attrs point to analyze
+         * @return not safe ragione but in region with outlierRadiuses
+         */
         private Boolean withinOutlierRegion(double[] attrs) {
         	double outlierRadius = borderlineRadius * 2;
         	double[] outlierRadiuses = new double[dimensions];
         	for(int i = 0; i < dimensions; i++) outlierRadiuses[i] = this.radiuses[i] + outlierRadius;
         	return !withinRegion(attrs, outlierRadiuses);
         }
-        
+
+        /**
+         * ENRICO
+         * @param attrs point
+         * @param radiuses radiuses
+         * @return distance from center < intercecting_distance(this.center, radiuses)
+         */
         public Boolean withinRegion(double[] attrs, double[] radiuses) {
             return euclideanDistanceFromCenter(attrs) < intersectingEuclideanDistanceFromCenter(attrs, radiuses);
         }
         
         public Boolean intersectingWithOtherCentroid(double[] otherCentre, double[] otherRadiuses, double otherBorderlineRadius) {
-        	return intersectingEuclideanDistanceFrom(otherCentre, this.centre, this.radiuses) + intersectingEuclideanDistanceFrom(this.centre, otherCentre, otherRadiuses) + borderlineRadius + otherBorderlineRadius > euclideanDistanceBetween(this.centre, otherCentre);
+        	return intersectingEuclideanDistanceFrom(otherCentre, this.centre, this.radiuses) +
+                    intersectingEuclideanDistanceFrom(this.centre, otherCentre, otherRadiuses) +
+                    borderlineRadius + otherBorderlineRadius
+                    > euclideanDistanceBetween(this.centre, otherCentre);
         }
         
         private double euclideanDistanceFromCenter(double[] attrs) {
@@ -420,6 +457,7 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
             double[] randCentre = new double[this.numAttsOption.getValue()];
             
             // try to place centroid in space without overlapping with others
+            //TODO WHAT IF NEVER FOUND??
             Boolean foundPlacement = false;
             while(!foundPlacement) {
 	            for (int j = 0; j < randCentre.length; j++) {
@@ -427,7 +465,8 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
 	            }
 	            foundPlacement = true;
 	            for(int j = 0; j < i; j++) {
-	            	if(distribution.centroids[j].intersectingWithOtherCentroid(randCentre, randRadiuses, randBorderlineRadius)) foundPlacement = false;
+	            	if(distribution.centroids[j].intersectingWithOtherCentroid(randCentre, randRadiuses, randBorderlineRadius))
+	            	    foundPlacement = false;
 	            }
             }
             
