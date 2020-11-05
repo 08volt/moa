@@ -1,11 +1,13 @@
 package moa.dabrze.streams.generators;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
 import com.github.javacliparser.StringOption;
 
+import jdk.internal.cmm.SystemResourcePressureImpl;
 import moa.core.InstanceExample;
 import moa.core.ObjectRepository;
 import moa.tasks.TaskMonitor;
@@ -20,7 +22,7 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
     private static final long serialVersionUID = 1L;
     
     private abstract class DriftProgression {
-    	protected int startInstance = 0, endInstance = 200000;
+    	protected int startInstance = 0, endInstance = 100000;
     	protected double startProgress = 0.0, endProgress = 1.0;
     	abstract double progress(int instancesPast);
     	
@@ -87,7 +89,9 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 				if (instancesPast < startInstance || endInstance < instancesPast) throw new Exception("Periodic drift triggered incorrectly.");
 				else {
 					double driftProgress = (double)(instancesPast - startInstance) / (endInstance - startInstance);
-					if (driftProgress > 0.5) driftProgress = 1 - driftProgress;
+					if (driftProgress > 0.5) {
+						driftProgress = 1 - driftProgress;
+					}
 					driftProgress *= 2;
 					return startProgress + driftProgress * (endProgress - startProgress);
 				}
@@ -147,7 +151,7 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 		void applyToImpl(Distribution distribution, int instancesPast) {
         	for (Centroid centroid : distribution.centroids) {
         		for (int i = 0; i < centroid.centre.length; i++) {
-        			centroid.centre[i] += (randomness.nextDouble() - 0.5) / progression.speed() * 100;
+        			centroid.centre[i] += (randomness.nextDouble() - 0.5) / ( 1 + progression.speed()) * 100;
         		}
         	}
     	}
@@ -177,7 +181,7 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 			this.targetCenters = new double[distribution.centroids.length][];
 			for (int centroidIdx = 0; centroidIdx < distribution.centroids.length; centroidIdx++) {
 				targetCenters[centroidIdx] = new double[distribution.centroids[centroidIdx].radiuses.length];
-				Boolean foundPlacement = false;
+				boolean foundPlacement = false;
 				while(!foundPlacement) {
 	        		for (int radiusIdx = 0; radiusIdx < distribution.centroids[centroidIdx].radiuses.length; radiusIdx++) {
 	        			double border = baseDistribution.centroids[centroidIdx].radiuses[radiusIdx] + baseDistribution.centroids[centroidIdx].borderlineRadius;
@@ -229,19 +233,18 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
     		distribution.outlierRatio = baseDistribution.outlierRatio * progression.progress(instancesPast);
     	}
     }
-    
+
     static class AppearingCentroidsDrift extends Drift {
     	void applyToImpl(Distribution distribution, int instancesPast) {
     		double progress = progression.progress(instancesPast);
+    		if(progress!=progress) progress = 0.0;
     		for(int i = 0; i < distribution.centroids.length; i++) {
-    			if (i < Math.floor(progress)) {
+    			if (i <= Math.floor(progress)) {
     				distribution.centroids[i].radiuses = baseDistribution.centroids[i].radiuses.clone();
     				distribution.centroids[i].borderlineRadius = baseDistribution.centroids[i].borderlineRadius;
     				distribution.centroidWeights[i] = 1;
     			} else {
-    				for (int l = 0; l < distribution.centroids[i].radiuses.length; l++) {
-        				distribution.centroids[i].radiuses[l] = 0;
-    				}
+					Arrays.fill(distribution.centroids[i].radiuses, 0);
     				distribution.centroids[i].borderlineRadius = 0;
     				distribution.centroidWeights[i] = 0;
     			}
@@ -268,7 +271,7 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
     	
     	private void prepareJoinPoint(Distribution distribution) {
     		joinPoint = new double[distribution.centroids[0].radiuses.length];
-    		Boolean foundPlacement = false;
+    		boolean foundPlacement = false;
     		while(!foundPlacement) {
     			for (int i = 0; i < distribution.centroids[0].radiuses.length; i++) {
     				joinPoint[i] = randomness.nextDouble() - 0.5;
@@ -288,7 +291,9 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
     static class BorderlineDrift extends Drift {
 		void applyToImpl(Distribution distribution, int instancesPast) {
     		double borderlinePresence = progression.progress(instancesPast);
-        	for (int centroidIdx = 0; centroidIdx < distribution.centroids.length; centroidIdx++) {
+			if(borderlinePresence == 0.0 ) return;
+
+			for (int centroidIdx = 0; centroidIdx < distribution.centroids.length; centroidIdx++) {
         		double borderlineRadius = baseDistribution.centroids[centroidIdx].borderlineRadius;
         		distribution.centroids[centroidIdx].borderlineRadius = borderlinePresence * borderlineRadius;
         		for (int radiusIdx = 0; radiusIdx < distribution.centroids[centroidIdx].radiuses.length; radiusIdx++) {
@@ -373,7 +378,7 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 			try {
 				this.drifts[i] = (Drift) driftsByName.get(driftName).newInstance();
 				this.drifts[i].randomness = this.instanceRandom;
-				DriftProgression progression = null;
+				DriftProgression progression = new SuddenDriftProgression();
 				if (driftProgression.equals("incremental")) progression = new IncrementalDriftProgression();
 				if (driftProgression.equals("sudden")) progression = new SuddenDriftProgression();
 				if (driftProgression.equals("periodic")) progression = new PeriodicDriftProgression();

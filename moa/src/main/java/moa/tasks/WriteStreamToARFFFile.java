@@ -81,6 +81,7 @@ public class WriteStreamToARFFFile extends AuxiliarMainTask {
                     w.write("\n");
                     numWritten++;
                 }
+                System.out.println("written "+ numWritten +" instances");
                 w.close();
             } catch (Exception ex) {
                 throw new RuntimeException(
