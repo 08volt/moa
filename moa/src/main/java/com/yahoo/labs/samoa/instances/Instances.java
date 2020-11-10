@@ -466,6 +466,29 @@ public class Instances implements Serializable {
         throw new UnsupportedOperationException("Not yet implemented"); //CobWeb
     }
 
+
+    /**
+     * Mean and STD.
+     *
+     * @param j the j
+     * @return the mean [0] the std[1]
+     */
+    public double[] meanAndStd(int j) {
+        double sum = 0.0, standardDeviation = 0.0;
+        int length = this.numInstances();
+
+        for(Instance i : this.instances) {
+            sum += i.value(j);
+        }
+
+        double mean = sum/length;
+
+        standardDeviation += Math.pow(sum - mean, 2);
+
+
+        return new double[] {mean,Math.sqrt(standardDeviation/length)};
+    }
+
     /**
      * Read instance.
      *

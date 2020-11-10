@@ -93,8 +93,15 @@ public class InstanceImpl implements MultiLabelInstance {
      * @param numAttributes the num attributes
      */
     public InstanceImpl(int numAttributes) {
-        this.instanceData = new DenseInstanceData(new double[numAttributes]); //JD
+        this.instanceData = new DenseInstanceData(new double[numAttributes]);
+        this.instanceHeader = new InstancesHeader();
+        Attribute[] attr = new Attribute[numAttributes];
+        for(int a = 0; a< numAttributes; a++)
+            attr[a] = new Attribute(""+a);
+        instanceHeader.instanceInformation = new InstanceInformation(null,attr);
+        instanceHeader.setClassIndex(numAttributes-1);
         this.weight = 1;
+        
     }
 
     /**

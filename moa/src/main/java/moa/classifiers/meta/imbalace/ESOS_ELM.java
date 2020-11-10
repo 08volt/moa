@@ -6,7 +6,7 @@
  * Neurocomputing, vol. 149, pp. 316-329, 2015
  */
 
-package moa.dabrze.classifiers.ann.meta;
+package moa.classifiers.meta.imbalace;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
@@ -38,7 +38,7 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
             "Classifier used in ELMStore", WELM.class, "moa.dabrze.classifiers.ann.WELM");
 
     public IntOption ensembleSize = new IntOption("ensembleSize", 's',
-            "The number of OS-ELMs in the main ensemble to start with", 15);
+            "The number of OS-ELMs in the main ensemble to start with", 10);
 
     public IntOption period = new IntOption("period", 'p',
             "The number of instances after which drift is detected", 1000);
