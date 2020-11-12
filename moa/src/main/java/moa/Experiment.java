@@ -38,11 +38,11 @@ public class Experiment {
 //        driftsByName.add("clusters-movement");
 //        driftsByName.add("appearing-clusters");
 //        driftsByName.add("splitting-clusters");
-          driftsByName.add("borderline");
+//        driftsByName.add("borderline");
 //        driftsByName.add("shapeshift");
 //        driftsByName.add("minority-share");
 
-        String[] speeds = {"periodic"};//"sudden","incremental",
+        String[] speeds = {"incremental","sudden","periodic"};
         int[][] startend = new int[3][2];
         startend[1][0] = 50000;
         startend[1][1] = 50000;
@@ -51,7 +51,7 @@ public class Experiment {
         startend[2][0] = 45000;
         startend[2][1] = 55000;
 
-        int[] minority_shares = {2,3,4};
+        int[] minority_shares = {4,2,3,1};
 
         for(String name: driftsByName){
             for (int minority: minority_shares){
@@ -75,9 +75,7 @@ public class Experiment {
                     String cli = "moa.dabrze.streams.generators.ImbalancedDriftGenerator -d " +
                         name +
                         "/" + speeds[s] +
-                        ",start=" + startend[s][0] +
-                        ",end=" + startend[s][1] +
-                        ",value-start=0.0,value-end=1.0" +
+                        ",start=0,end=1000000,value-start=0.0,value-end=1.0" +
                         " -n 2 -m 0." + minority +
                         " -s 0.5 -b 0.5";
 
@@ -136,12 +134,14 @@ public class Experiment {
     public static void main(String[] args) throws IOException {
         Experiment exp = new Experiment();
         //exp.run();
-        exp.kneighbours();
+        System.out.println(args[0]+ "preprocessing_KDDCup.csv");
+        exp.kneighbours(args[0]);
+
         //exp.run(100000, true);
     }
 
-    public void kneighbours(){
-        String dir = "/Users/08volt/Desktop/StremingML/MyMoa/moa/moa/src/main/java/moa/";
+    public void kneighbours(String path){
+        String dir = path;//""/Users/08volt/Desktop/StremingML/MyMoa/moa/moa/src/main/java/moa/";
         String csvFile = dir + "preprocessing_KDDCup.csv";
         Integer[] cat_idx = {2,3,4,7,12};
         ArrayList<Integer> cat_idxx = new ArrayList<>();
@@ -182,8 +182,8 @@ public class Experiment {
                 if(cnt%10000 == 0)
                     System.out.println(cnt);
 
-                if(cnt >= 400000)
-                    break;
+                //if(cnt >= 400000)
+                  //  break;
 
 //                    break;
 
@@ -198,8 +198,8 @@ public class Experiment {
             Instances kn;
             for(int i=0; i<df.numInstances(); i++) {
                 kn = search.kNearestNeighbours(df.get(i), 6);
-                int[] res = new int[6];
-                for( int k = 0; k<6; k++){
+                int[] res = new int[5];
+                for( int k = 0; k<5; k++){
                     res[k] = (int)kn.get(k).value(0);
 
                 }

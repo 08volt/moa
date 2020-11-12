@@ -34,13 +34,13 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 			return instancesPast >= startInstance && instancesPast <= endInstance;
 		}
     }
-        
-    /**
-     * Linear progression from start value to end value
-     */
-    private class IncrementalDriftProgression extends DriftProgression {    	
-    	double progress(int instancesPast) {
-    		try{
+
+	/**
+	 * Linear progression from start value to end value
+	 */
+	private class IncrementalDriftProgression extends DriftProgression {
+		double progress(int instancesPast) {
+			try{
 				if (instancesPast < startInstance || instancesPast > endInstance)
 				{
 					throw new Exception("Incremental drift triggered incorrectly.");
@@ -55,16 +55,16 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 				e.printStackTrace();
 				System.exit(1);
 			}
-    		return Double.NaN;
-    	}
-    }
-    
-    /**
-     * End value when drift is active, start value otherwise
-     */
-    private class SuddenDriftProgression extends DriftProgression {
-    	double progress(int instancesPast) {
-    		try
+			return Double.NaN;
+		}
+	}
+
+	/**
+	 * End value when drift is active, start value otherwise
+	 */
+	private class SuddenDriftProgression extends DriftProgression {
+		double progress(int instancesPast) {
+			try
 			{
 				if (instancesPast == startInstance) return endProgress;
 				else throw new Exception("Sudden drift triggered incorrectly.");
@@ -74,17 +74,17 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 				e.printStackTrace();
 				System.exit(1);
 			}
-    		return Double.NaN;
-    	}
-    }
+			return Double.NaN;
+		}
+	}
 
-    /**
-     * While drift is active, linear progression from start value to end value
-     * and back.
-     */
-    private class PeriodicDriftProgression extends DriftProgression {
-    	double progress(int instancesPast) {
-    		try
+	/**
+	 * While drift is active, linear progression from start value to end value
+	 * and back.
+	 */
+	private class PeriodicDriftProgression extends DriftProgression {
+		double progress(int instancesPast) {
+			try
 			{
 				if (instancesPast < startInstance || endInstance < instancesPast) throw new Exception("Periodic drift triggered incorrectly.");
 				else {
@@ -94,6 +94,94 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 					}
 					driftProgress *= 2;
 					return startProgress + driftProgress * (endProgress - startProgress);
+				}
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				System.exit(1);
+			}
+			return Double.NaN;
+		}
+	}
+        
+    /**
+     * Linear progression from start value to end value
+     */
+    private class SpecialIncrementalDriftProgression extends DriftProgression {
+    	int Real_Start,Real_End;
+    	public SpecialIncrementalDriftProgression(int Real_Start, int Real_End){
+			this.Real_Start = Real_Start;
+			this.Real_End = Real_End;
+		}
+
+    	double progress(int instancesPast) {
+    		try{
+				if (instancesPast < startInstance || instancesPast > endInstance)
+				{
+					throw new Exception("Incremental drift triggered incorrectly.");
+				}
+				else {
+					if(instancesPast < Real_Start)
+						return 0.0;
+					if(instancesPast > Real_End)
+						return 1.0;
+					return (double)(instancesPast - Real_Start) / (Real_End - Real_Start);
+
+					//double instanceProgress = (double)(instancesPast - startInstance) / (endInstance - startInstance);
+					//return startProgress + instanceProgress * (endProgress - startProgress);
+				}
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				System.exit(1);
+			}
+    		return Double.NaN;
+    	}
+    }
+    
+    /**
+     * End value when drift is active, start value otherwise
+     */
+    private class SpecialSuddenDriftProgression extends DriftProgression {
+		int Real_Start,Real_End;
+		public SpecialSuddenDriftProgression(int Real_Start, int Real_End){
+			this.Real_Start = Real_Start;
+			this.Real_End = Real_End;
+		}
+    	double progress(int instancesPast) {
+    		if(instancesPast < Real_Start)
+					return 0.0;
+				return 1.0;
+    	}
+    }
+
+    /**
+     * While drift is active, linear progression from start value to end value
+     * and back.
+     */
+    private class SpecialPeriodicDriftProgression extends DriftProgression {
+		int Real_Start,Real_End;
+		public SpecialPeriodicDriftProgression(int Real_Start, int Real_End){
+			this.Real_Start = Real_Start;
+			this.Real_End = Real_End;
+		}
+    	double progress(int instancesPast) {
+    		try
+			{
+				if (instancesPast < startInstance || endInstance < instancesPast) throw new Exception("Periodic drift triggered incorrectly.");
+				if(instancesPast < Real_Start)
+					return 0.0;
+				if(instancesPast > Real_End)
+					return 0.0;
+				else {
+					double driftProgress = (double)(instancesPast - Real_Start) / (Real_End - Real_Start);
+					if (driftProgress > 0.5) {
+						driftProgress = 1 - driftProgress;
+					}
+					driftProgress *= 2;
+					return driftProgress;
 				}
 			}
 			catch(Exception e)
@@ -379,9 +467,9 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
 				this.drifts[i] = (Drift) driftsByName.get(driftName).newInstance();
 				this.drifts[i].randomness = this.instanceRandom;
 				DriftProgression progression = new SuddenDriftProgression();
-				if (driftProgression.equals("incremental")) progression = new IncrementalDriftProgression();
-				if (driftProgression.equals("sudden")) progression = new SuddenDriftProgression();
-				if (driftProgression.equals("periodic")) progression = new PeriodicDriftProgression();
+				if (driftProgression.equals("incremental")) progression = new SpecialIncrementalDriftProgression(45000,55000);
+				if (driftProgression.equals("sudden")) progression = new SpecialSuddenDriftProgression(50000,50000);
+				if (driftProgression.equals("periodic")) progression = new SpecialPeriodicDriftProgression(45000,55000);
 				if (progressionOptions.containsKey("start")) progression.startInstance = Integer.parseInt(progressionOptions.get("start"));
 				if (progressionOptions.containsKey("end")) progression.endInstance = Integer.parseInt(progressionOptions.get("end"));
 				if (progressionOptions.containsKey("value-start")) progression.startProgress = Double.parseDouble(progressionOptions.get("value-start"));
