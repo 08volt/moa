@@ -33,6 +33,11 @@ public class FlagOption extends AbstractOption {
         super(name, cliChar, purpose);
     }
 
+    public FlagOption(String name, char cliChar, String purpose, boolean default_value) {
+        super(name, cliChar, purpose);
+        setValue(default_value);
+    }
+
     public void setValue(boolean v) {
         this.isSet = v;
     }

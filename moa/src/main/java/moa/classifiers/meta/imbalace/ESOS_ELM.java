@@ -44,7 +44,7 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
             "The number of instances after which drift is detected", 1000);
 
     public FloatOption suddenDriftThreshold = new FloatOption("suddenDriftThreshold", 'u',
-            "The drop below set % of previous G-mean value denotes sudden drift", 0.9, 0.0, 1.0);
+            "The drop below set % of previous G-mean value denotes sudden drift", 1.0, 0.0, 1.0);
 
     private List<BundledElm> ensemble, welms;
     private ELMStore elmStore;
@@ -82,6 +82,8 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
                         ? Arrays.stream(votes).map(d -> d * elm.getWeight()).toArray()
                         : dummyVotes;
             }).collect(Collectors.toList());
+
+
             for(double[] votes: elmVotes)
             {
                 for(int j = 0; j < votes.length; ++j) ensembleVotes[j] += votes[j];
@@ -148,9 +150,13 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
         classCount[(int)instance.classValue()] += 1;
         if(initialBatch.size() == initialBatchSize)
         {
-            int _ensembleSize = ensembleSize.getValue(),
-                smaller_class = (classCount[0] <= classCount[1])? 0: 1,
-                imbalanceRatio = classCount[1 - smaller_class] / classCount[smaller_class];
+            int _ensembleSize = ensembleSize.getValue();
+            int smaller_class = (classCount[0] <= classCount[1])? 0: 1;
+
+            if (classCount[smaller_class] == 0){
+                classCount[smaller_class] = 1;
+            }
+            int imbalanceRatio = classCount[1 - smaller_class] / classCount[smaller_class];
             List<List<Instance>> batches = IntStream.range(0, _ensembleSize)
                 .mapToObj(i -> new ArrayList<Instance>())
                 .collect(Collectors.toList());
@@ -192,19 +198,32 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
         classCount[trueClass] += 1;
         confusionMatrix[trueClass][predClass] += 1;
         int _ensembleSize = ensembleSize.getValue(),
-            smallerClass = (classCount[0] <= classCount[1])? 0: 1,
-            imbalanceRatio = classCount[1 - smallerClass] / classCount[smallerClass];
+            smallerClass = (classCount[0] <= classCount[1])? 0: 1;
+        if (classCount[smallerClass] == 0){
+            classCount[smallerClass] = 1;
+        }
+        int imbalanceRatio = classCount[1 - smallerClass] / classCount[smallerClass];
         if(trueClass == smallerClass)
         {
+
             try
             {
                 int elmCount = Math.min(imbalanceRatio, _ensembleSize);
-                IntStream.range(0, elmCount)
-                        .mapToObj(i -> ensemble.get((minorityLearnerIndex + i) % _ensembleSize))
-                        .forEach(elm -> elm.trainOnInstance(instance));
+                //System.out.println("minority "+elmCount + " " + trueClass);
+                for(int i = 0; i< elmCount; i++){
+                    BundledElm e = ensemble.get((minorityLearnerIndex + i) % _ensembleSize);
+                    e.trainOnInstance(instance);
+
+                }
+
+//                IntStream.range(0, elmCount)
+//                        .mapToObj(i -> ensemble.get((minorityLearnerIndex + i) % _ensembleSize))
+//                        .forEach(elm -> elm.trainOnInstance(instance));
                 minorityLearnerIndex = (minorityLearnerIndex + elmCount) % _ensembleSize;
             }
-            catch(Exception e){}
+            catch(Exception e){
+                e.printStackTrace();
+            }
         }
         else
         {
@@ -230,6 +249,7 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
 
             if(detectDrift(newEnsembleGMean))
             {
+                System.out.println("DRIFT DETECTED");
                 ensemble.forEach(BundledElm::unsetCanVote);
                 BundledElm welm = new BundledElm(elmStore.createWELM());
                 welms.add(welm);
@@ -292,9 +312,11 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
         private double weight;
         private double gmean;
         private boolean canVote;
+        int[] counts;
 
         public BundledElm(ELM newElm)
         {
+            counts = new int[2];
             elm = newElm;
             confusionMatrix = new int[2][2];
             weight = 1.0;
@@ -319,6 +341,7 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
         }
 
         public void trainOnInstance(Instance instance) {
+            counts[(int)instance.classValue()] ++;
             elm.trainOnInstance(instance);
         }
 

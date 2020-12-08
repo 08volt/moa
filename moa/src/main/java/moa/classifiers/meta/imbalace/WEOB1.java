@@ -10,6 +10,8 @@ import moa.classifiers.MultiClassClassifier;
 import moa.core.Measurement;
 import moa.options.ClassOption;
 
+import java.util.Arrays;
+
 public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         CapabilitiesHandler {
 
@@ -62,6 +64,7 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
             classRecallOOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
             classRecallUOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
         }
+
         double uobGini = classRecallUOB.getGmean();
         double oobGini = classRecallOOB.getGmean();
 
@@ -69,7 +72,13 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         double alphaU = uobGini / (oobGini + uobGini);
 
         for(int i = 0; i < oobVotes.length; i++){
-            finalVotes[i] = alphaO * oobVotes[i] + alphaU*uobVotes[i];
+            try {
+                finalVotes[i] = alphaO * oobVotes[i] + alphaU * uobVotes[i];
+            }catch (IndexOutOfBoundsException e){
+                System.out.println(Arrays.toString(uobVotes));
+                System.out.println(Arrays.toString(oobVotes));
+                finalVotes[i] = 0;
+            }
         }
         return finalVotes;
 

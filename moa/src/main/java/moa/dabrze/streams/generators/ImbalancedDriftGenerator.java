@@ -7,7 +7,6 @@ import java.util.Random;
 
 import com.github.javacliparser.StringOption;
 
-import jdk.internal.cmm.SystemResourcePressureImpl;
 import moa.core.InstanceExample;
 import moa.core.ObjectRepository;
 import moa.tasks.TaskMonitor;

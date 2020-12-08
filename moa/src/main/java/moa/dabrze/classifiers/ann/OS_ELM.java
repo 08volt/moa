@@ -19,7 +19,7 @@ import java.util.Arrays;
 public class OS_ELM extends ELM {
 
     public IntOption batchSize = new IntOption("batchSize", 'b',
-        "The size of the batch to train the classifier", 1);
+        "The size of the batch to train the classifier", 1000);
 
     @Override
     public String getPurposeString() {

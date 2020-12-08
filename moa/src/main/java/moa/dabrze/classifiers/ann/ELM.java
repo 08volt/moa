@@ -42,10 +42,10 @@ public class ELM extends AbstractClassifier implements MultiClassClassifier
         "The number of hidden neurons of SLFN", 100);
 
     public FlagOption usePesudoinverse = new FlagOption("usePesudoinverse", 'p',
-        "Use Moore-Penrose inverse to calculate the inverse of the matrix");
+        "Use Moore-Penrose inverse to calculate the inverse of the matrix", true);
 
     public FloatOption epsilon = new FloatOption("epsilon", 'e',
-        "Very small threshold value used for calculation", 0.00001);
+        "Very small threshold value used for calculation", 0.001);
 
     protected SerializableConsumer<Instance> learn;
 
