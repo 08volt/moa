@@ -1,11 +1,9 @@
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 
 import com.github.javacliparser.FloatOption;
 import com.yahoo.labs.samoa.instances.Instance;
-import moa.classifiers.meta.OzaBag;
-import moa.core.Measurement;
-import moa.core.MiscUtils;
+
 import java.util.*;
 
 public class OOB extends ImprovedOOB {

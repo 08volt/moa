@@ -11,7 +11,7 @@
 
 // <---le19/01/18 modification to start class size as equal for all classes
 
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import com.github.javacliparser.FloatOption;
 import com.yahoo.labs.samoa.instances.Instance;

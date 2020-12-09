@@ -9,7 +9,7 @@
  * 
  */
 
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import com.yahoo.labs.samoa.instances.Instance;
 

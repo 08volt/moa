@@ -6,7 +6,7 @@
  * Neurocomputing, vol. 149, pp. 316-329, 2015
  */
 
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;

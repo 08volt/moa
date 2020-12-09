@@ -1,4 +1,4 @@
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import com.github.javacliparser.FloatOption;
 import com.yahoo.labs.samoa.instances.Instance;

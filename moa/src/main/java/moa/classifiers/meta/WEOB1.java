@@ -1,4 +1,4 @@
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
@@ -25,7 +25,7 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
             "The time decay factor for class recall", 0.9, 0, 1);
 
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l',
-            "Classifier to train.", Classifier.class, "trees.HoeffdingTree");
+            "Classifier to train.", Classifier.class, "trees.HoeffdingAdaptiveTree");
 
     public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's',
             "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);

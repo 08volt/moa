@@ -19,7 +19,7 @@
  *
  */
 
-package moa.classifiers.meta.imbalace;
+package moa.classifiers.meta;
 
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.MultiClassClassifier;
