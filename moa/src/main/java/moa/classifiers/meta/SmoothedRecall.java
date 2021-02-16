@@ -7,7 +7,7 @@ import java.util.Arrays;
 public class SmoothedRecall {
 
     private final double[][] recalls;
-    private final int windowSize;
+    private int windowSize;
     private final double[] smoothedRecalls;
     private final double theta;
     private int windowPos;
@@ -16,7 +16,7 @@ public class SmoothedRecall {
 
         this.recalls = new double[numClasses][windowSize];
         this.windowPos = -1;
-        this.windowSize = windowSize;
+        this.windowSize = 0;
         this.smoothedRecalls = new double[numClasses];
         this.theta = theta;
         for(int i = 0; i<numClasses; i++){
@@ -27,6 +27,7 @@ public class SmoothedRecall {
     public double getGmean(){
         if(recalls == null)
             return 1d;
+
         double gini = 1d;
         for (double recall : smoothedRecalls) {
             gini *= recall;
@@ -37,7 +38,6 @@ public class SmoothedRecall {
 
     public void insertPrediction(int classValue, boolean pred){
         double r;
-
         //array initialization
         if( this.windowPos == -1){
             r = pred ? 1d:0d;
@@ -52,45 +52,31 @@ public class SmoothedRecall {
                 }
             windowPos = 0;
             return;
-
         }
-
-
         r = this.theta * recalls[classValue][windowPos] + (1d - this.theta) * (pred ? 1d:0d);
-
-        //newWP -> position of the new instance on the window
-        //timesteps -> timesteps on the window until this instance
+        //newWP -> cursor for the position of the new instance on the window
         int newWP = windowPos + 1;
-        int timesteps = newWP;
-        if(newWP >= windowSize) {
+        if(newWP >= recalls[classValue].length)
             newWP = 0;
-            timesteps = windowSize;
-        }else if(recalls[classValue][newWP] >= 0){
-            timesteps = windowSize;
-        }
-
-
-
-
+        // remove the oldest recalls if the window is full
         for(int c = 0; c< smoothedRecalls.length; c++) {
-
             //smoothedRecall become the sum of the saved recall
-            smoothedRecalls[c] = smoothedRecalls[c] * timesteps;
-            if (timesteps == windowSize)
-                //if window is full
-                smoothedRecalls[c] = smoothedRecalls[c] - recalls[c][newWP];
-            if(c == classValue) {
-                recalls[c][newWP] = r;
-                smoothedRecalls[c] = (smoothedRecalls[c] + r) / Math.min(timesteps + 1, windowSize);
-            }
-            else {
-                recalls[c][newWP] = recalls[c][windowPos];
-                smoothedRecalls[c] = (smoothedRecalls[c] + recalls[c][windowPos]) / Math.min(timesteps + 1, windowSize);
-            }
+            smoothedRecalls[c] = smoothedRecalls[c] * windowSize;
+            smoothedRecalls[c] = smoothedRecalls[c] - recalls[c][newWP];
         }
+        // increase the size of the window if its not at the maximum
+        this.windowSize = Math.min(windowSize + 1, recalls[classValue].length);
+        //add the new recalls to the window
+        for(int c = 0; c < smoothedRecalls.length; c++) {
+            if (c == classValue) {
+                recalls[c][newWP] = r;
+            } else {
+                recalls[c][newWP] = recalls[c][windowPos];
+            }
+            smoothedRecalls[c] = (smoothedRecalls[c] + recalls[c][newWP]) / windowSize;
+        }
+        //update the cursor window position
         windowPos = newWP;
-
-
     }
 
 

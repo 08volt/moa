@@ -249,7 +249,7 @@ public class ESOS_ELM extends AbstractClassifier implements MultiClassClassifier
 
             if(detectDrift(newEnsembleGMean))
             {
-                System.out.println("DRIFT DETECTED");
+                //System.out.println("DRIFT DETECTED");
                 ensemble.forEach(BundledElm::unsetCanVote);
                 BundledElm welm = new BundledElm(elmStore.createWELM());
                 welms.add(welm);

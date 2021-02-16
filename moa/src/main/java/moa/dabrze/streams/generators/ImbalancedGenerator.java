@@ -44,6 +44,7 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
     public IntOption modelRandomSeedOption = new IntOption("modelRandomSeed",
             'r', "Seed for random generation of model.", 1);
 
+
     public IntOption instanceRandomSeedOption = new IntOption(
             "instanceRandomSeed", 'i',
             "Seed for random generation of instances.", 1);

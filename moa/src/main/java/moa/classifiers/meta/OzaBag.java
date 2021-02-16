@@ -33,6 +33,7 @@ import moa.core.MiscUtils;
 import moa.options.ClassOption;
 import com.github.javacliparser.IntOption;
 
+
 /**
  * Incremental on-line bagging of Oza and Russell.
  *
@@ -70,6 +71,10 @@ public class OzaBag extends AbstractClassifier implements MultiClassClassifier,
             "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);
 
     protected Classifier[] ensemble;
+
+
+
+
 
     @Override
     public void resetLearningImpl() {

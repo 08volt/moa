@@ -97,12 +97,19 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
     
     public IntOption minSizeAllowedOption = new IntOption("minSizeAllowed", 'm',
             "Minimum number of samples in the minority class for appling SMOTE.",
-            100, 10, Integer.MAX_VALUE); 
-    
-    public FlagOption disableDriftDetectionOption = new FlagOption("disableDriftDetection", 'd',
+            100, 10, Integer.MAX_VALUE);
+
+	public IntOption maxWindowSize = new IntOption("maxWindowSize", 'w',
+			"Maximum number of samples in the minority window",
+			100000, 10, Integer.MAX_VALUE);
+
+	public FlagOption disableDriftDetectionOption = new FlagOption("disableDriftDetection", 'd',
             "Should use ADWIN as drift detector?");
-    
-    protected Classifier learner;                  
+	public IntOption randomSeedOption = new IntOption("randomSeed", 'r', "Seed for random behaviour of the classifier.", 1);
+
+	protected Random rand;
+
+	protected Classifier learner;
         
     protected int neighbors; 
     protected double threshold;
@@ -125,6 +132,8 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
     protected SamoaToWekaInstanceConverter samoaToWeka = new SamoaToWekaInstanceConverter();
     protected WekaToSamoaInstanceConverter wekaToSamoa = new WekaToSamoaInstanceConverter();    
 	protected int[] indexValues;
+
+	int cnt = 0;
     
     @Override
     public void resetLearningImpl() {     	    	
@@ -155,7 +164,8 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
     }
     
     @Override
-    public void trainOnInstanceImpl(Instance instance) { 
+    public void trainOnInstanceImpl(Instance instance) {
+    	cnt++;
     	this.learner.trainOnInstance(instance);
     	fillBatches(instance);    	
     	//update adwin change detector
@@ -175,8 +185,11 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
 					allowSMOTE = true;
 				}
 			}
-		}				 
-		
+			//System.out.println("size min " + min.size() + "\nsize maj "+ maj.size() + "\ninstance "+ this.cnt);
+
+		}
+
+
 		//Apply SMOTE only if the number of minority class samples are greater than -m
 		if (allowSMOTE) {				
 			//Apply the online SMOTE version until the ratio will be equal to the threshold			
@@ -225,13 +238,54 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
     }
     
     //adapt the window in case of change
-    private void checkADWINWidth(){    	
+    private void checkADWINWidth(){
+		if (this.W.size()>maxWindowSize.getValue()){
+			int diff = this.W.size() - maxWindowSize.getValue();
+			//System.out.println("W Removed " + diff + " Instances");
+
+			for (int i = 0; i < diff; i ++) {
+				//remove the old instance
+
+				Instance instanceRemoved = this.W.remove(0);
+
+
+				//remove it also from the min or maj window
+				if (instanceRemoved.classValue() == 1.0) {
+					//this.majority.remove(instanceRemoved);
+					this.maj.delete(0);
+					//adapt the counter
+					////////////////////////this.nMajorityTotal --;
+					//check if the instance removed was used to generate synthetic instances
+					//and update the counter
+					////////////////////////if (this.instanceGenerated.get(instanceRemoved) != null) {
+					////////////////////////this.nGeneratedMajorityTotal -= this.instanceGenerated.get(instanceRemoved);
+					////////////////////////this.instanceGenerated.remove(instanceRemoved);
+					////////////////////////}
+				} else {
+					//this.minority.remove(instanceRemoved);
+					this.min.delete(0);
+
+					////////////////////////this.nMinorityTotal --;
+					////////////////////////if (this.instanceGenerated.get(instanceRemoved) != null) {
+					////////////////////////	this.nGeneratedMinorityTotal -= this.instanceGenerated.get(instanceRemoved);
+					////////////////////////	this.instanceGenerated.remove(instanceRemoved);
+					////////////////////////}
+				}
+			}
+
+
+
+		}
+
+
     	if (this.adwin.getChange()) {     		    	
     		int newWidth = this.adwin.getWidth();
     		int windowSize = this.W.size();
     		int diff = windowSize - newWidth;
-    		   		        	                	
-    		for (int i = 0; i < diff; i ++) {   
+			//System.out.println("ADWIN Removed " + diff + " Instances");
+
+
+			for (int i = 0; i < diff; i ++) {
     			//remove the old instance    			
     			Instance instanceRemoved = this.W.remove(0);
     			//remove it also from the min or maj window
@@ -297,10 +351,12 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
     
     private Instance generateNewInstance(Instances minoritySamples) {       	    	    		    	
     	//find randomly an instance
-    	Random rand = new Random(1);
-        int pos = rand.nextInt(minoritySamples.numInstances());
+		if(this.rand == null){
+			this.rand = new Random(randomSeedOption.getValue());
+		}
+        int pos = this.rand.nextInt(minoritySamples.numInstances());
         while (this.alreadyUsed.contains(pos)) {
-        	pos = rand.nextInt(minoritySamples.numInstances());
+        	pos = this.rand.nextInt(minoritySamples.numInstances());
         }
         this.alreadyUsed.add(pos);
         if (this.alreadyUsed.size() == minoritySamples.numInstances()) {
@@ -314,18 +370,18 @@ public class CSMOTE extends AbstractClassifier implements MultiClassClassifier {
 			Instances neighbours = search.kNearestNeighbours(instanceI,Math.min(this.neighbors,minoritySamples.numInstances()-1));			
 			// create synthetic sample    	
 			double[] values = new double[minoritySamples.numAttributes()];
-			int nn = rand.nextInt(neighbours.numInstances());
+			int nn = this.rand.nextInt(neighbours.numInstances());
 			Enumeration attrEnum = this.samoaToWeka.wekaInstance(minoritySamples.instance(0)).enumerateAttributes();
 			while(attrEnum.hasMoreElements()) {
 				Attribute attr = (Attribute) attrEnum.nextElement();				
 				if (!attr.equals(this.samoaToWeka.wekaInstance(minoritySamples.instance(0)).classAttribute())) {
 					if (attr.isNumeric()) {
 						double dif = this.samoaToWeka.wekaInstance(neighbours.instance(nn)).value(attr) - this.samoaToWeka.wekaInstance(instanceI).value(attr);
-						double gap = rand.nextDouble();
+						double gap = this.rand.nextDouble();
 						values[attr.index()] = (double) (this.samoaToWeka.wekaInstance(instanceI).value(attr) + gap * dif);
 					} else if (attr.isDate()) {
 						double dif = this.samoaToWeka.wekaInstance(neighbours.instance(nn)).value(attr) - this.samoaToWeka.wekaInstance(instanceI).value(attr);
-						double gap = rand.nextDouble();
+						double gap = this.rand.nextDouble();
 						values[attr.index()] = (long) (this.samoaToWeka.wekaInstance(instanceI).value(attr) + gap * dif);
 					} else {
 						int[] valueCounts = new int[attr.numValues()];
