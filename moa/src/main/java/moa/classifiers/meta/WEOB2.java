@@ -16,10 +16,10 @@ public class WEOB2 extends WEOB1{
             classRecallUOB = new SmoothedRecall(inst.numClasses(),recalltheta.getValue(),SmoothedRecallWindowSizeOption.getValue());
         }
 
-        double uobGini = classRecallUOB.getGmean();
-        double oobGini = classRecallOOB.getGmean();
+        double uobGmean = classRecallUOB.getGmean();
+        double oobGmean = classRecallOOB.getGmean();
 
-        if (oobGini>uobGini){
+        if (oobGmean>uobGmean){
             return oobVotes;
         }
         return uobVotes;

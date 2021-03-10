@@ -21,6 +21,7 @@
 
 package moa.classifiers.meta;
 
+import com.github.javacliparser.FloatOption;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.MultiClassClassifier;
 import moa.classifiers.Classifier;
@@ -103,11 +104,14 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
 	public IntOption randomSeedOption = new IntOption("randomSeed", 'r', "Seed for random behaviour of the classifier.", 1);
 
 
+	public FloatOption deltaAdwinOption = new FloatOption("deltaAdwin", 'd',
+			"Delta of Adwin change detection", 0.002, 0.0, 1.0);
+
 	protected Classifier learner;
     protected Classifier learnerResetBal;
     protected Classifier learnerReset;
     protected Classifier learnerBal;
-    protected ADWIN adwin = new ADWIN();
+    protected ADWIN adwin;
 
     protected Random rand;
     
@@ -186,7 +190,10 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
         this.learnerResetBal = (Classifier) getPreparedClassOption(this.baseLearnerOption);
         this.learnerReset = (Classifier) getPreparedClassOption(this.baseLearnerOption);
         this.learnerBal = (Classifier) getPreparedClassOption(this.baseLearnerOption);
-     
+
+		if(this.adwin == null){
+			this.adwin = new ADWIN(deltaAdwinOption.getValue());
+		}
         this.adwin.resetChange();
         this.nAttributes = -1;
         
@@ -242,9 +249,14 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
     			this.indexValues[i] = i;
     		}
     	}
+		double input = 0.0;
+    	if (this.learner.correctlyClassifies(instance))
+			input = 1.0;
+
+		this.adwin.setInput(input);
     	this.learner.trainOnInstance(instance);
     	fillBatches(instance);
-    	this.adwin.setInput(instance.classValue()); 
+
     	try {
 			checkADWINWidth(instance);
 		} catch (Exception e1) {
@@ -287,7 +299,8 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
 	        this.warning = true;	          
 	    } 
     	
-    	if (this.adwin.getChange()) {    		
+    	if (this.adwin.getChange()) {
+    		System.out.println("CHANGE DETECTED");
     		boolean minBatchSizeCheck = checkMinConstraints(this.batch.size(),this.minInstanceLimitBatch);
     		boolean minResetBatchSizeCheck = checkMinConstraints(this.resetBatch.size(),this.minInstanceLimitResetBatch);      		    		 		    		
     		//if both batches has reached the minimum size
@@ -328,7 +341,8 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
     		boolean maxResetBatchCheck = checkMaxConstraints(this.resetBatch.size(),this.maxInstanceLimitResetBatch); 	        	
     		//if one of the 2 batches has reached the maximun size
     		//even if there isn't a change, it starts training the models in parallel
-        	if (maxBatchSizeCheck || maxResetBatchCheck) {   		        		
+        	if (maxBatchSizeCheck || maxResetBatchCheck) {
+
     			trainsParallelModels();    			
         	}     		    		    	  		
     	}
@@ -750,6 +764,7 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
     	compare.add(1,this.kStatBal);
     	compare.add(2,this.kStatReset);
     	compare.add(3,this.kStatResetBal);
+    	System.out.println("COMPARING STATS");
     	
     	double max = compare.get(0);
     	int maxPos = 0;
@@ -759,7 +774,7 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
     			maxPos = pos;
     		}
     	}
-    	
+		System.out.println("BEST: "+maxPos);
     	return maxPos;
     }	
     
@@ -794,6 +809,10 @@ public class RebalanceStream extends AbstractClassifier implements MultiClassCla
 
     @Override
     public double[] getVotesForInstance(Instance instance) {
+		if(this.adwin == null){
+			this.adwin = new ADWIN(deltaAdwinOption.getValue());
+
+		}
     	double[] prediction = this.learner.getVotesForInstance(instance);
     	fillConfusionMatrix(instance, this.confusionMatrixLearner, this.learner);
         return prediction;

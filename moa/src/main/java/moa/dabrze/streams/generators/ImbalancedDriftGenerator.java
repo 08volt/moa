@@ -325,15 +325,20 @@ public class ImbalancedDriftGenerator extends ImbalancedGenerator {
     	void applyToImpl(Distribution distribution, int instancesPast) {
     		double progress = progression.progress(instancesPast);
     		if(progress!=progress) progress = 0.0;
+    		System.out.println(progress);
+			System.out.println(Math.floor(progress));
     		for(int i = 0; i < distribution.centroids.length; i++) {
-    			if (i <= Math.floor(progress)) {
+
+
+    			if (i == Math.floor(progress)) {
     				distribution.centroids[i].radiuses = baseDistribution.centroids[i].radiuses.clone();
     				distribution.centroids[i].borderlineRadius = baseDistribution.centroids[i].borderlineRadius;
     				distribution.centroidWeights[i] = 1;
     			} else {
-					Arrays.fill(distribution.centroids[i].radiuses, 0);
-    				distribution.centroids[i].borderlineRadius = 0;
-    				distribution.centroidWeights[i] = 0;
+    				for(int r = 0; r<baseDistribution.centroids[i].radiuses.length;r++)
+						distribution.centroids[i].radiuses[r] = baseDistribution.centroids[i].radiuses[r] * progress;
+    				distribution.centroids[i].borderlineRadius = baseDistribution.centroids[i].borderlineRadius * progress;
+    				distribution.centroidWeights[i] = progress;
     			}
     		}
     	}

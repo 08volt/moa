@@ -26,7 +26,6 @@ public class ImprovedOOB extends OOB {
 
 	public ImprovedOOB() {
 		super();
-		this.classSize = null;
 	}
 
 	@Override

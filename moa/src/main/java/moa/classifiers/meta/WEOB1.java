@@ -72,12 +72,12 @@ public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         }
 
         // compute the corresponding gmeans
-        double uobGini = classRecallUOB.getGmean();
-        double oobGini = classRecallOOB.getGmean();
+        double uobGmean = classRecallUOB.getGmean();
+        double oobGmean = classRecallOOB.getGmean();
 
         // normalize the gmeans values
-        double alphaO = oobGini / (oobGini + uobGini);
-        double alphaU = uobGini / (oobGini + uobGini);
+        double alphaO = oobGmean / (oobGmean + uobGmean);
+        double alphaU = uobGmean / (oobGmean + uobGmean);
 
         // sum the votes of the OOB and UOB weighted with the normalized gmeans
         for(int i = 0; i < finalVotes.length; i++){
