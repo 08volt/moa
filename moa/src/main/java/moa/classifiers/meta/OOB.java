@@ -43,18 +43,15 @@ public class OOB extends OzaBag {
     }
 
     protected void updateClassSize(Instance inst) {
-
         // Give all the classes the same weight at the beginning of the stream
         if (this.classSize == null) {
             classSize = new double[inst.numClasses()];
             Arrays.fill(classSize, 1d / classSize.length);
         }
-
         // update the class size with the decaying factor theta for all the classes
         for (int i=0; i<classSize.length; ++i) {
             classSize[i] = theta.getValue() * classSize[i] + (1d - theta.getValue()) * ((int) inst.classValue() == i ? 1d:0d);
         }
-        updateClassRecall(inst);
     }
 
     protected void updateClassRecall(Instance inst){
@@ -66,7 +63,9 @@ public class OOB extends OzaBag {
         int classk = (int)inst.classValue();
         // update the recall of the instance class
         classRecall[classk] = theta.getValue() * classRecall[classk] + (1d - theta.getValue()) * (correctlyClassifies(inst) ? 1d:0d);
+    }
 
+    protected void createClassSets(){
         //compare the recall and size of the classes to assign them to the correct group
         for (int i=0; i<classSize.length-1; i++)
             for (int j=i; j<classSize.length; j++){
@@ -87,7 +86,6 @@ public class OOB extends OzaBag {
             if (!minorities.contains(i) && !majorities.contains(i))
                 normal.add(i);
         }
-
     }
 
     @Override
@@ -97,6 +95,8 @@ public class OOB extends OzaBag {
         }
         // update the class sizes and recalls
         updateClassSize(inst);
+        updateClassRecall(inst);
+        createClassSets();
         //compute the lambda for the poisson extraction
         double lambda = calculatePoissonLambda(inst);
         for (moa.classifiers.Classifier classifier : this.ensemble) {

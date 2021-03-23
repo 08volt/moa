@@ -102,7 +102,6 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
         }
 
         /**
-         * ENRICO
          * Generate points until one return True from withinSafeRegion method
          * @param random random numbers generator
          * @return found point
@@ -124,10 +123,8 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
         }
 
         /**
-         * ENRICO
          * Generate points until one return True from withinBorderlineRegion method
          * -> not safe region && in radiuses + borderlineRadius
-         * TODO centre[i] - 1 < attrs[i] < centre[i] + 1   check if radiuses[i] == 1 ??
          * @param random random numbers generator
          * @return found point
          */
@@ -147,7 +144,6 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
 
 
         /**
-         * ENRICO
          * borderlineRadiuses[i] = this.radiuses[i] + borderlineRadius
           * @param attrs point to analyze
          * @return not safe ragione but in region with borderlineRadiuses
@@ -160,7 +156,6 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
 
 
         /**
-         * ENRICO
          * outlierRadiuses[i] = this.radiuses[i] + borderlineRadius * 2
          * @param attrs point to analyze
          * @return not safe ragione but in region with outlierRadiuses
@@ -173,7 +168,6 @@ public class ImbalancedGenerator extends AbstractOptionHandler implements
         }
 
         /**
-         * ENRICO
          * @param attrs point
          * @param radiuses radiuses
          * @return distance from center < intercecting_distance(this.center, radiuses)
