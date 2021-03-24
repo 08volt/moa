@@ -7,6 +7,17 @@ import com.yahoo.labs.samoa.instances.Instance;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
 
+/**
+ * Oversampling Online Bagging
+ *
+ *
+ * <p>A learning framework for online class imbalance learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2013</p>
+ *
+ *
+ */
+
 import java.util.*;
 
 public class OOB extends OzaBag {

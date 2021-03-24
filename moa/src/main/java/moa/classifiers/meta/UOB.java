@@ -2,6 +2,17 @@ package moa.classifiers.meta;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
+/**
+ * Undersampling Online Bagging
+ *
+ *
+ * <p>A learning framework for online class imbalance learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2013</p>
+ *
+ *
+ */
+
 public class UOB extends OOB {
 
     //UOB lambda

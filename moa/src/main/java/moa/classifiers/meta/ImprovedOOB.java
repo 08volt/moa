@@ -14,6 +14,17 @@
 package moa.classifiers.meta;
 import com.yahoo.labs.samoa.instances.Instance;
 
+/**
+ * Improved Oversampling Online Bagging
+ *
+ *
+ * <p>Resampling-Based Ensemble Methods for Online Class Imbalance Learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2015</p>
+ *
+ *
+ */
+
 public class ImprovedOOB extends OOB {
 	
 	private static final long serialVersionUID = 1L;

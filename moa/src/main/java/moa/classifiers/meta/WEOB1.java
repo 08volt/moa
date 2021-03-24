@@ -10,7 +10,16 @@ import moa.classifiers.MultiClassClassifier;
 import moa.core.Measurement;
 import moa.options.ClassOption;
 
-import java.util.Arrays;
+/**
+ * Weighted Ensamble Online Bagging 1
+ *
+ *
+ * <p>Resampling-Based Ensemble Methods for Online Class Imbalance Learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2015</p>
+ *
+ *
+ */
 
 public class WEOB1 extends AbstractClassifier implements MultiClassClassifier,
         CapabilitiesHandler {

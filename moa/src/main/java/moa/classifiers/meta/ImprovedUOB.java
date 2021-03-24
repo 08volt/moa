@@ -1,12 +1,12 @@
 /**
- * Author: Leandro L. Minku (leandro.minku@leicester.ac.uk)
- * Implementation of Undersampling Online Bagging as in
- * WANG, S.; MINKU, L.L.; YAO, X. "Dealing with Multiple Classes in Online Class Imbalance Learning", 
- * Proceedings of the 25th International Joint Conference on Artificial Intelligence (IJCAI'16), July 2016
- * 
- * Please note that this was not the implementation used in the experiments done in the paper above.
- * However, it implements the algorithm proposed in that paper. So, it should reflect those results.
- * 
+ * Improved Undersampling Online Bagging
+ *
+ *
+ * <p>Resampling-Based Ensemble Methods for Online Class Imbalance Learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2015</p>
+ *
+ *
  */
 
 package moa.classifiers.meta;

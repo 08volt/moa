@@ -2,6 +2,17 @@ package moa.classifiers.meta;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
+/**
+ * Weighted Ensamble Online Bagging 2
+ *
+ *
+ * <p>Resampling-Based Ensemble Methods for Online Class Imbalance Learning
+ * Shuo Wang and Leandro L. Minku and Xin Yao
+ * 2015</p>
+ *
+ *
+ */
+
 public class WEOB2 extends WEOB1{
 
     @Override
